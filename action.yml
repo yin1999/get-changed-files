@@ -1,0 +1,32 @@
+name: 'Get changed files'
+description: 'Get changed files of a pull request'
+inputs:
+  paths:
+    description: 'Regex to match files'
+    required: false
+    default: ''
+  token:
+    description: 'GitHub token, required by the gh cli'
+    default: ${{ github.token }}
+outputs:
+  files:
+    description: 'Changed files'
+    value: ${{ steps.get-changed-files.outputs.files }}
+
+runs:
+  using: 'composite'
+  steps:
+    - id: get-changed-files
+      run: |
+        FILES=$(gh api repos/${{ github.repository }}/compare/${{ env.BASE_SHA }}...${{ env.HEAD_SHA }} \
+          --jq '.files | .[] | select(.status|IN("added", "modified", "renamed", "copied", "changed")) | .filename')
+        if [[ -n "${{ inputs.paths }}" ]]; then
+          FILES=$(echo "${FILES}" | egrep -i "${{ inputs.paths }}")
+        fi
+        # set multiline output
+        # see https://github.com/orgs/community/discussions/26288
+        FILES="${FILES//'%'/'%25'}"
+        FILES="${FILES//$'\n'/'%0A'}"
+        FILES="${FILES//$'\r'/'%0D'}"
+        echo "files=${FILES}" >> $GITHUB_OUTPUT
+      shell: bash
