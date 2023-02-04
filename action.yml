@@ -30,3 +30,7 @@ runs:
         FILES="${FILES//$'\r'/'%0D'}"
         echo "files=${FILES}" >> $GITHUB_OUTPUT
       shell: bash
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        GH_TOKEN: ${{ inputs.token }}
